@@ -48,24 +48,23 @@
     <div class='container'>
         <div class='row'>
             <div class='col-md-4 col-md-offset-4'>
-                <h2 class="text-center">Registraion form</h2>
-                <form role='form'>
+                <h2 class="text-center">Registration form</h2>
+                <form method="POST">
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Name</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
+                        <label for="inputName">Name</label>
+                        <input type="text" class="form-control" id="inputName" placeholder="Enter name" name='name'>
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Login</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
+                        <label for="inputLogin">Login</label>
+                        <input type="text" class="form-control" id="inputLogin" placeholder="Login" name='login'>
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputEmail1">Email address</label>
-                        <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
-                        <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+                        <label for="inputEmail">Email address</label>
+                        <input type="email" class="form-control" id="inputEmail" placeholder="Enter email" name='email'>
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Password</label>
-                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+                        <label for="inputPassword">Password</label>
+                        <input type="password" class="form-control" id="inputPassword" placeholder="Password" name='password'>
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
