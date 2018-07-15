@@ -1,9 +1,10 @@
 import os
 
-from flask import Flask, session, render_template
-from flask_session import Session
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from flask import Flask, session, render_template, request
+# from flask_session import Session
+
+from models import db
+from models import User
 
 app = Flask(__name__)
 
@@ -11,14 +12,9 @@ app = Flask(__name__)
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
 
-# Configure session to use filesystem
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
-
-# Set up database
-engine = create_engine(os.getenv("DATABASE_URL"))
-db = scoped_session(sessionmaker(bind=engine))
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
 
 
 @app.route("/")
@@ -26,10 +22,23 @@ def index():
     return "Project 1: TODO"
 
 
-@app.route("/register")
+@app.route("/register", methods=['GET', 'POST'])
 def register():
-    return render_template('register.html')
+    if request.method == 'POST':
+        name = request.form['name']
+        login = request.form['login']
+        email = request.form['email']
+        password = request.form['password']
+        user = User(login=login, password=password, name=name, email=email)
+        try:
+            db.session.add(user)
+            db.session.commit()
+            return "user saved"
+        except Exception as e:
+            return "user not saved\n" + str(e)
+    else:
+        return render_template('register.html')
 
-@app.route("/login")
+@app.route("/login", methods=['GET', 'POST'])
 def login():
     return render_template('login.html')
