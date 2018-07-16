@@ -23,4 +23,7 @@ class Book(db.Model):
     author = db.Column(db.String, nullable=False)
     year = db.Column(db.String, nullable=False)
 
+    def __str__(self):
+        return f"{self.isbn}, {self.author}, {self.title}"
+
 

@@ -2,9 +2,10 @@ import os
 
 from flask import Flask, session, render_template, request, redirect, url_for
 from flask_session import Session
+from sqlalchemy import or_
 
 from models import db
-from models import User
+from models import User, Book
 
 app = Flask(__name__)
 
@@ -24,13 +25,20 @@ db.init_app(app)
 
 
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def index():
     if "username" not in session:
         return redirect(url_for('login'))
-    else:
+    if request.method == 'GET':
         return render_template("index.html")
-
+    else:
+        search_string = request.form['search_string']
+        books = Book.query.filter(or_(
+            Book.isbn.ilike(f"%{search_string}%"), 
+            Book.title.ilike(f"%{search_string}%"), 
+            Book.author.ilike(f"%{search_string}%")
+            )).all()
+        return render_template("search_results.html", books=books)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
