@@ -54,18 +54,17 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-            <h2>Search result</h2>
+                <h2>Search result</h2>
             </div>
         </div>
-        <!-- Example row of columns -->
         {% for book in books %}
-                <div class="row">
+        <div class="row">
             <div class="col-md-12">
                 <div class="well">
                     <h3>{{ book.title }}</h3>
-                    <h4>by {{ book.author }}</h4>
-                    <p>({{ book.year }})
-                    ISBN: {{ book.isbn }}</p>
+                    <h4>by {{ book.author }}     
+                    ({{ book.year }})</h4>
+                    <p>ISBN: {{ book.isbn }}</p>
                 </div>
             </div>
         </div>

@@ -38,6 +38,8 @@ def index():
             Book.title.ilike(f"%{search_string}%"), 
             Book.author.ilike(f"%{search_string}%")
             )).all()
+        if not books:
+            return render_template("index.html", message="No books were found")
         return render_template("search_results.html", books=books)
 
 @app.route("/register", methods=['GET', 'POST'])
