@@ -13,7 +13,9 @@
     <div class="row">
         <div class="col-md-12">
             <div class="well">
-                <h3>{{ book.title }}</h3>
+                <a href="/book/{{ book.id }}">
+                    <h3>{{ book.title }}</h3>
+                </a>
                 <h4>by {{ book.author }} ({{ book.year }})</h4>
                 <p>ISBN: {{ book.isbn }}</p>
             </div>

@@ -1,0 +1,54 @@
+{% extends "layout.html" %} 
+
+{% block title %} {{ book.title }} {% endblock %} 
+
+{% block content %}
+{% for error in errors %}
+<li>{{ error }}</li>
+{% endfor %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h2>{{ book.title }}</h2>
+            <h4>by {{ book.author }}</h4>
+            <p>
+                Published in {{ book.year }}
+            </p>
+            <p>
+                ISBN: {{ book.isbn }}
+            </p>
+        </div>
+        <div class="col-md-6">
+            <div class="well">
+                <h2>Rewievs</h2>
+                {% for review in reviews %}
+                <p>
+                {{ review.text }}<br>
+                Rating: {{ review.rating }}
+            </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            {% if users_review %}
+            <h2>Your review</h2>
+            {{ users_review.text }}
+            {% else %}
+            <h2>Leave a review</h2>
+            <form method="POST">
+                <textarea class="form-control" name="text" rows="10" placeholder="You can only write a review for the book once!"></textarea>
+                <input type="radio" name="rating" value="1"> 1
+                <input type="radio" name="rating" value="2"> 2
+                <input type="radio" name="rating" value="3"> 3
+                <input type="radio" name="rating" value="4"> 4
+                <input type="radio" name="rating" value="5"> 5
+                <br>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

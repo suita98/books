@@ -26,4 +26,12 @@ class Book(db.Model):
     def __str__(self):
         return f"{self.isbn}, {self.author}, {self.title}"
 
+class Review(db.Model):
+    __tablename__ = "reviews"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey("books.id"), nullable=False)
+    text = db.Column(db.String, nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+
 
