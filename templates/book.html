@@ -21,6 +21,10 @@
         <div class="col-md-6">
             <div class="well">
                 <h2>Rewievs</h2>
+                {% if goodreads_info['work_ratings_count'] %}
+                {{ goodreads_info['work_ratings_count'] }} people rated<br>
+                average rating: {{ goodreads_info['average_rating'] }}
+                {% endif %}
                 {% for review in reviews %}
                 <p>
                 {{ review.text }}<br>

@@ -39,10 +39,12 @@
                 </button>
                 <a class="navbar-brand" href="/">Books</a>
             </div>
+            {% block loginstate %}
             <div id="navbar" class="navbar-collapse collapse">
-                <p class="navbar-text navbar-right">Signed in as {{ session.username }}</p>
+                <p class="navbar-text navbar-right">Signed in as {{ user.login }}</p>
                 <a href="/logout" class="btn btn-default navbar-btn navbar-right">Logout</a>
             </div>
+            {% endblock %}
         </div>
     </nav>
 

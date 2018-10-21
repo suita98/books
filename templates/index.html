@@ -4,9 +4,18 @@
 
 {% block content %}
 <div class="container">
+    {% if messages %}
+    <div class="row">
+    {% for message in messages %}
+    <div class="well">
+    {{ message }}
+    </div>
+    {% endfor %}
+    </div>
+    {% endif %}
     <div class="row">
         <div class="col-md-12">
-            <form method="POST">
+            <form method="POST" action="{{ url_for('index') }}">
                 <h2>Search</h2>
                 {% if message is defined %}
                 <p>No books were found</p>
