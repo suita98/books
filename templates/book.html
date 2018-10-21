@@ -25,12 +25,14 @@
                 {{ goodreads_info['work_ratings_count'] }} people rated<br>
                 average rating: {{ goodreads_info['average_rating'] }}
                 {% endif %}
-                {% for review in reviews %}
-                <p>
-                {{ review.text }}<br>
-                Rating: {{ review.rating }}
-            </p>
-                {% endfor %}
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <p>
+                    {{ review.text }}<br>
+                    Rating: {{ review.rating }}
+                    </p>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
     </div>
