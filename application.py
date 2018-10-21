@@ -5,10 +5,8 @@ import json
 
 from flask import Flask, session, render_template, request, redirect, url_for
 from flask_session import Session
-from sqlalchemy import or_
-
-from models import db
-from models import User, Book, Review
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 app = Flask(__name__)
 
@@ -21,28 +19,25 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db.init_app(app)
-
-
-
+# Establish connection with database
+engine = create_engine(os.getenv("DATABASE_URL"))
+db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
     if not is_logged_in():
         return redirect(url_for('login'))
     else:
-        user = User.query.get(session['id'])
+        user = db.execute('SELECT * FROM users WHERE id = :id;', {'id': session['id']}).fetchone()
     if request.method == 'GET':
         return render_template("index.html", user=user)
     if request.method == 'POST':
         search_string = request.form['search_string']
-        books = Book.query.filter(or_(
-            Book.isbn.ilike(f"%{search_string}%"), 
-            Book.title.ilike(f"%{search_string}%"), 
-            Book.author.ilike(f"%{search_string}%")
-            )).all()
+        books = db.execute('''
+            SELECT * FROM books WHERE LOWER(isbn) LIKE :search_string OR
+            LOWER(title) LIKE :search_string OR
+            LOWER(author) LIKE :search_string;
+            ''', {'search_string': f'%{search_string}%'}).fetchall()
         if not books:
             return render_template("index.html", message="No books were found", user=user)
         return render_template("search_results.html", books=books, user=user)
@@ -50,12 +45,15 @@ def index():
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
+    '''Implementation of registration page'''
     if is_logged_in():
+        # If user is already logged in we add to the list of messages a relevant message
         try:
             messages.append("You are already registered")
         except NameError:
+        # If list of messages doesn't exist - we create it
             messages = ["You are already registered"]
-        user = User.query.get(session['id'])
+        user = db.execute('SELECT * FROM users WHERE id = :id;', {'id': session['id']}).fetchone()
         return render_template('index.html', messages=messages, user=user)
     if request.method == 'GET':
         return render_template('register.html')
@@ -66,10 +64,10 @@ def register():
         password = request.form['password']
         # TODO: keep hashed password instead of plain text
         # TODO: user is unique
-        user = User(login=login, password=password, name=name, email=email)
         try:
-            db.session.add(user)
-            db.session.commit()
+            db.execute('INSERT INTO users (name, login, email, password) VALUES (:name, :login, :email, :password)', 
+                {'name': name, 'login': login, 'email': email, 'password': password})
+            db.commit()
             return "user saved"
         except Exception as e:
             return "user not saved\n" + str(e)
@@ -82,23 +80,26 @@ def login():
             messages.append("You are already logged in")
         except NameError:
             messages = ["You are already logged in"]
-        user = User.query.get(session['id'])
+        user = db.execute('SELECT * FROM users WHERE id = :id;', {'id': session['id']}).fetchone()
         return render_template('index.html', messages=messages, user=user)
+    
     if request.method == 'GET':
         return render_template('login.html')
+    
     if request.method == 'POST':
         login = request.form['login']
         password = request.form['password']
-        user = User.query.filter_by(login=login).first()
-        if user is not None:
-            if user.password == password:
-                session['id'] = user.id
-                return redirect(url_for('index'))
-            else:
-                return 'Password doesnt match'
-        else:
+        user = db.execute('SELECT * FROM users WHERE login = :login;', {'login': login}).fetchone()
+        
+        if user is None:
             return "User not found"
-
+        
+        if user.password != password:
+            return 'Password doesnt match'
+        
+        session['id'] = user.id
+        return redirect(url_for('index'))            
+            
 
 @app.route("/logout", methods=['GET'])
 def logout():
@@ -111,11 +112,12 @@ def book(id):
     if not is_logged_in():
         return redirect(url_for('login'))
     else:
-        user = User.query.get(session['id'])
+        user = db.execute('SELECT * FROM users WHERE id = :id;', {'id': session['id']}).fetchone()
+
     errors = []
-    book = Book.query.get(id)
-    reviews = Review.query.filter_by(book_id=id)
-    users_review = Review.query.filter_by(book_id = id).filter_by(user_id = session['id']).first()
+    book = db.execute('SELECT * FROM books WHERE id = :id;', {'id': id}).fetchone()
+    reviews = db.execute('SELECT * FROM reviews WHERE book_id = :book_id;', {'book_id': id}).fetchall()
+    users_review = db.execute('SELECT * FROM reviews WHERE book_id = :book_id AND user_id = :user_id;', {'book_id': id, 'user_id': session['id']}).fetchone()
 
     goodreads_info = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "U3PyMNiFCwRX3CE0noLqVg", "isbns": "{}".format(book.isbn)}).json()['books'][0]
     print(goodreads_info)
@@ -136,25 +138,26 @@ def book(id):
         user_id = session['id']
 
         if not errors:
-            review = Review(text=text, rating=rating, book_id=book_id, user_id=user_id)
-            db.session.add(review)
-            db.session.commit()
-            users_review = Review.query.filter_by(book_id = id).filter_by(user_id = session['id']).first()
-
+            db.execute('INSERT INTO reviews (text, rating, book_id, user_id) VALUES (:text, :rating, :book_id, :user_id)', 
+                {'text': text, 'rating': rating, 'book_id': book_id, 'user_id': user_id})
+            db.commit()
+            users_review = db.execute('SELECT * FROM reviews WHERE book_id = :book_id AND user_id = :user_id;', {'book_id': id, 'user_id': session['id']}).fetchone()
         return render_template('book.html', book=book, reviews=reviews, users_review=users_review, errors=errors, goodreads_info=goodreads_info, user=user)
 
 
 @app.route("/api/<isbn>", methods=['GET'])
 def api(isbn):
-    book = Book.query.filter_by(isbn=isbn).first()
-    # in not book:
-    #     return 
-    reviews = Review.query.filter_by(book_id=book.id).all()
+    book = db.execute('SELECT * FROM books WHERE isbn = :isbn;', {'isbn': isbn}).fetchone()
+
+    reviews = db.execute('SELECT * FROM reviews WHERE book_id = :book_id;', {'book_id': book.id}).fetchall()
     review_count = len(reviews)
     sum_rating = 0
     for review in reviews:
         sum_rating += review.rating
-    average_rating = sum_rating / review_count
+    try:
+        average_rating = sum_rating / review_count
+    except ZeroDivisionError:
+        average_rating = None
     result = {
         "title": book.title,
         "author": book.author,
